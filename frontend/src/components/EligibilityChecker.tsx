@@ -1,7 +1,7 @@
 import { useState, type FC } from 'react';
-import axios from 'axios';
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
+import { checkEligibilityWithAI } from '../services/aiService';
 
 interface FormData {
   income: string;
@@ -16,6 +16,7 @@ interface EligibilityResult {
   message: string;
   estimatedRate?: number;
   maxLoanAmount?: number;
+  reasoning?: string;
 }
 
 const EligibilityChecker: FC = () => {
@@ -29,6 +30,7 @@ const EligibilityChecker: FC = () => {
   });
   const [result, setResult] = useState<EligibilityResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showReasoning, setShowReasoning] = useState(false);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -40,12 +42,28 @@ const EligibilityChecker: FC = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/loan/eligibility`,
-        form
-      );
-      setResult(res.data);
+      const requestData = {
+        income: parseFloat(form.income),
+        creditScore: parseInt(form.creditScore),
+        employmentStatus: form.employmentStatus.toUpperCase().replace('-', '_'),
+        monthlyExpenses: parseFloat(form.income) * 0.3,
+        loanAmount: parseFloat(form.vehiclePrice) * 0.8,
+        downPayment: parseFloat(form.vehiclePrice) * 0.2,
+        vehiclePrice: parseFloat(form.vehiclePrice),
+        vehicleAge: 0,
+      };
+
+      const aiResult = await checkEligibilityWithAI(requestData);
+      
+      setResult({
+        isEligible: aiResult.isEligible,
+        message: aiResult.message,
+        estimatedRate: aiResult.estimatedRate,
+        maxLoanAmount: aiResult.maxLoanAmount,
+        reasoning: aiResult.reasoning,
+      });
     } catch (err) {
+      console.error('Eligibility check error:', err);
       setResult({
         isEligible: false,
         message: 'Unable to check eligibility. Please try again later.',
@@ -231,6 +249,20 @@ const EligibilityChecker: FC = () => {
                 )}
                 {result.isEligible && result.maxLoanAmount && (
                   <p>Maximum Loan Amount: ${result.maxLoanAmount.toLocaleString()}</p>
+                )}
+                {result.reasoning && (
+                  <div className="mt-4">
+                    <button
+                      type="button"
+                      onClick={() => setShowReasoning(!showReasoning)}
+                      className="text-sm font-medium text-primary-600 hover:text-primary-500"
+                    >
+                      {showReasoning ? 'Hide Reasoning' : 'Show Reasoning'}
+                    </button>
+                    {showReasoning && (
+                      <p className="mt-2 text-gray-600">{result.reasoning}</p>
+                    )}
+                  </div>
                 )}
               </div>
             </div>

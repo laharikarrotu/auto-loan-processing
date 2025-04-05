@@ -32,4 +32,5 @@ export default defineConfig({
       'Content-Type': 'application/javascript',
     },
   },
+  base: '/'
 }) 

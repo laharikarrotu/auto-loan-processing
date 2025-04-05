@@ -1,4 +1,4 @@
-import { type FC, useState, useEffect, useRef } from 'react';
+import { type FC, useState, useEffect, useRef, useCallback } from 'react';
 import { MicrophoneIcon, StopIcon, XMarkIcon, Cog6ToothIcon } from '@heroicons/react/24/solid';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -18,27 +18,40 @@ const VoiceAssistant: FC = () => {
   const [transcript, setTranscript] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [commands, setCommands] = useState<Command[]>([
+  const recognitionRef = useRef<any>(null);
+  const commands = useRef<Command[]>([
     {
       phrase: 'check eligibility',
-      action: () => window.location.href = '/eligibility',
+      action: () => window.location.href = '/check-eligibility',
     },
     {
       phrase: 'start application',
-      action: () => window.location.href = '/application',
+      action: () => window.location.href = '/apply',
     },
     {
       phrase: 'upload documents',
       action: () => window.location.href = '/documents',
     },
   ]);
-  const recognitionRef = useRef<any>(null);
+
+  const processCommand = useCallback((text: string) => {
+    const command = commands.current.find(cmd => 
+      text.toLowerCase().includes(cmd.phrase.toLowerCase())
+    );
+    
+    if (command) {
+      setIsProcessing(true);
+      command.action();
+      setIsProcessing(false);
+    }
+  }, []);
 
   useEffect(() => {
     if ('webkitSpeechRecognition' in window) {
       recognitionRef.current = new window.webkitSpeechRecognition();
-      recognitionRef.current.continuous = true;
-      recognitionRef.current.interimResults = true;
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.maxAlternatives = 1;
 
       recognitionRef.current.onresult = (event: any) => {
         const transcript = Array.from(event.results)
@@ -53,6 +66,10 @@ const VoiceAssistant: FC = () => {
         console.error('Speech recognition error:', event.error);
         setIsListening(false);
       };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
     }
 
     return () => {
@@ -60,23 +77,9 @@ const VoiceAssistant: FC = () => {
         recognitionRef.current.stop();
       }
     };
-  }, []);
+  }, [processCommand]);
 
-  const processCommand = (text: string) => {
-    const command = commands.find(cmd => 
-      text.toLowerCase().includes(cmd.phrase.toLowerCase())
-    );
-    
-    if (command) {
-      setIsProcessing(true);
-      setTimeout(() => {
-        command.action();
-        setIsProcessing(false);
-      }, 1000);
-    }
-  };
-
-  const toggleListening = () => {
+  const toggleListening = useCallback(() => {
     if (recognitionRef.current) {
       if (isListening) {
         recognitionRef.current.stop();
@@ -85,14 +88,14 @@ const VoiceAssistant: FC = () => {
       }
       setIsListening(!isListening);
     }
-  };
+  }, [isListening]);
 
-  const toggleAssistant = () => {
+  const toggleAssistant = useCallback(() => {
     setIsOpen(!isOpen);
     if (isListening) {
       toggleListening();
     }
-  };
+  }, [isOpen, isListening, toggleListening]);
 
   return (
     <div className="fixed bottom-4 right-4 z-50">
@@ -151,7 +154,7 @@ const VoiceAssistant: FC = () => {
               <div className="mt-4">
                 <h4 className="text-sm font-medium text-gray-900 mb-2">Available Commands:</h4>
                 <ul className="text-sm text-gray-500 space-y-1">
-                  {commands.map((cmd, index) => (
+                  {commands.current.map((cmd, index) => (
                     <li key={index} className="flex items-center">
                       <span className="mr-2">•</span>
                       {cmd.phrase}

@@ -26,15 +26,21 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/index.html",
-      "headers": {
-        "content-type": "text/html; charset=utf-8"
-      }
+      "dest": "/index.html"
     }
   ],
   "headers": [
     {
       "source": "/(.*).js",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/javascript"
+        }
+      ]
+    },
+    {
+      "source": "/(.*).mjs",
       "headers": [
         {
           "key": "Content-Type",

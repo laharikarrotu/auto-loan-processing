@@ -18,7 +18,7 @@ export interface EligibilityResult {
   message: string;
   estimatedRate?: number;
   maxLoanAmount?: number;
-  reasoning: string;
+  reasoning?: string;
 }
 
 export async function checkEligibilityWithAI(input: EligibilityInput): Promise<EligibilityResult> {

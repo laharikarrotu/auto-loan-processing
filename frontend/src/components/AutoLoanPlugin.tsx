@@ -2,6 +2,7 @@ import { type FC } from 'react';
 import VoiceAssistant from './VoiceAssistant';
 import OCRProcessor from './OCRProcessor';
 import EligibilityChecker from './EligibilityChecker';
+import { type EligibilityResult } from '../services/aiService';
 
 interface AutoLoanPluginProps {
   apiKey?: string;
@@ -13,7 +14,7 @@ interface AutoLoanPluginProps {
     };
   };
   theme?: 'light' | 'dark';
-  onEligibilityCheck?: (result: any) => void;
+  onEligibilityCheck?: (result: EligibilityResult) => void;
   onDocumentProcess?: (result: any) => void;
 }
 

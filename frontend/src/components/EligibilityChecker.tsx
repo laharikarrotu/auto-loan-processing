@@ -1,7 +1,11 @@
 import { useState, type FC } from 'react';
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
-import { checkEligibilityWithAI } from '../services/aiService';
+import { checkEligibilityWithAI, type EligibilityResult } from '../services/aiService';
+
+interface EligibilityCheckerProps {
+  onEligibilityCheck?: (result: EligibilityResult) => void;
+}
 
 interface FormData {
   income: string;
@@ -11,15 +15,7 @@ interface FormData {
   loanTerm: string;
 }
 
-interface EligibilityResult {
-  isEligible: boolean;
-  message: string;
-  estimatedRate?: number;
-  maxLoanAmount?: number;
-  reasoning?: string;
-}
-
-const EligibilityChecker: FC = () => {
+const EligibilityChecker: FC<EligibilityCheckerProps> = ({ onEligibilityCheck }) => {
   const navigate = useNavigate();
   const [form, setForm] = useState<FormData>({
     income: '',
@@ -62,11 +58,16 @@ const EligibilityChecker: FC = () => {
         maxLoanAmount: aiResult.maxLoanAmount,
         reasoning: aiResult.reasoning,
       });
+
+      if (onEligibilityCheck) {
+        onEligibilityCheck(aiResult);
+      }
     } catch (err) {
       console.error('Eligibility check error:', err);
       setResult({
         isEligible: false,
         message: 'Unable to check eligibility. Please try again later.',
+        reasoning: 'An error occurred while processing your request.'
       });
     } finally {
       setLoading(false);

@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Disclosure, Menu, Transition } from '@headlessui/react';
 import { Bars3Icon, XMarkIcon, UserCircleIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
+import VoiceAssistant from '../VoiceAssistant';
 
 const navigation = [
   { name: 'Home', href: '/' },
@@ -148,6 +149,8 @@ export default function Layout({ children }: LayoutProps) {
       <main className="py-10">
         <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">{children}</div>
       </main>
+
+      <VoiceAssistant />
 
       <footer className="bg-white mt-auto">
         <div className="mx-auto max-w-7xl py-12 px-4 sm:px-6 md:flex md:items-center md:justify-between lg:px-8">
